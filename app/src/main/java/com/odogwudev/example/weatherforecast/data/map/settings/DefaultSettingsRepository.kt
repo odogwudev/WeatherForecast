@@ -1,0 +1,77 @@
+package com.odogwudev.example.weatherforecast.data.map.settings
+
+import com.odogwudev.example.weatherforecast.BuildConfig
+import android.content.Context
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import com.odogwudev.example.weatherforecast.core.api.settings.SettingsRepository
+import com.odogwudev.example.weatherforecast.core.model.DefaultLocation
+import com.odogwudev.example.weatherforecast.core.model.Languages
+import com.odogwudev.example.weatherforecast.core.model.Units
+import com.odogwudev.example.weatherforecast.data.dataStore
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+
+class DefaultSettingsRepository @Inject constructor(
+    @ApplicationContext private val context: Context
+) : SettingsRepository {
+
+    private val PREF_LANGUAGE by lazy { stringPreferencesKey("language") }
+    private val PREF_UNITS by lazy { stringPreferencesKey("units") }
+    private val PREF_LAT_LNG by lazy { stringPreferencesKey("lat_lng") }
+
+    //Lekki
+    private val DEFAULT_LONGITUDE = 3.601521
+    private val DEFAULT_LATITUDE = 6.458985
+
+    override suspend fun setLanguage(language: String) {
+        set(key = PREF_LANGUAGE, value = language)
+    }
+
+    override suspend fun getLanguage(): Flow<String> =
+        get(key = PREF_LANGUAGE, default = Languages.ENGLISH.languageName)
+
+    override suspend fun setUnits(units: String) {
+        set(key = PREF_UNITS, value = units)
+    }
+
+    override suspend fun getUnits(): Flow<String> =
+        get(key = PREF_UNITS, default = Units.METRIC.value)
+
+    override fun getAppVersion(): String =
+        "Version : ${BuildConfig.VERSION_NAME}-${BuildConfig.BUILD_TYPE}"
+
+    override fun getAvailableLanguages(): List<String> =
+        Languages.values().map { it.languageName }
+
+    override fun getAvailableMetrics(): List<String> = Units.values().map { it.value }
+
+    override suspend fun setDefaultLocation(defaultLocation: DefaultLocation) {
+        set(key = PREF_LAT_LNG, value = "${defaultLocation.latitude}/${defaultLocation.longitude}")
+    }
+
+    override suspend fun getDefaultLocation(): Flow<DefaultLocation> {
+        return get(
+            key = PREF_LAT_LNG,
+            default = "$DEFAULT_LATITUDE/$DEFAULT_LONGITUDE"
+        ).map { latlng ->
+            val latLngList = latlng.split("/").map { it.toDouble() }
+            DefaultLocation(latitude = latLngList[0], longitude = latLngList[1])
+        }
+    }
+
+    private suspend fun <T> set(key: Preferences.Key<T>, value: T) {
+        context.dataStore.edit { settings ->
+            settings[key] = value
+        }
+    }
+
+    private fun <T> get(key: Preferences.Key<T>, default: T): Flow<T> {
+        return context.dataStore.data.map { settings ->
+            settings[key] ?: default
+        }
+    }
+}

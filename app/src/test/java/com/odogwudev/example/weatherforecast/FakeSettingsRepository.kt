@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.flow
 
 class FakeSettingsRepository : SettingsRepository {
 
-    private val settingsMap = mutableMapOf<String,String>()
+    private val settingsMap = mutableMapOf<String, String>()
     override suspend fun setLanguage(language: String) {
         settingsMap["language"] = language
     }
@@ -34,7 +34,7 @@ class FakeSettingsRepository : SettingsRepository {
         settingsMap["latlng"] = "${defaultLocation.latitude}/${defaultLocation.longitude}"
     }
 
-    override suspend fun getDefaultLocation(): Flow<DefaultLocation> = flow{
+    override suspend fun getDefaultLocation(): Flow<DefaultLocation> = flow {
         val latLng = settingsMap["latlng"] ?: "0.0/0.0"
         val latLngList = latLng.split("/")
         DefaultLocation(latitude = latLngList[0].toDouble(), longitude = latLngList[1].toDouble())

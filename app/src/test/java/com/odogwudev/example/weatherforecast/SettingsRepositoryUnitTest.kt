@@ -5,6 +5,7 @@ import app.cash.turbine.test
 import com.odogwudev.example.weatherforecast.core.api.settings.SettingsRepository
 import com.odogwudev.example.weatherforecast.core.model.Languages
 import com.odogwudev.example.weatherforecast.core.model.Units
+import com.odogwudev.example.weatherforecast.data.map.settings.DefaultSettingsRepository
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
